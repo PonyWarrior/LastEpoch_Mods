@@ -178,4 +178,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="mkdir &quot;H:\SteamLibrary\steamapps\common\Last Epoch\Mods\$(TargetName)&quot;&#xD;&#xA;xcopy &quot;$(TargetName)&quot; &quot;H:\SteamLibrary\steamapps\common\Last Epoch\Mods\$(TargetName)&quot; /s /i /y&#xD;&#xA;xcopy &quot;$(TargetPath)&quot; &quot;H:\SteamLibrary\steamapps\common\Last Epoch\Mods\&quot; /s /i /y" />
+  </Target>
 </Project>
