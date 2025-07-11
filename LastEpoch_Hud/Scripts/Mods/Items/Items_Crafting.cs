@@ -4,6 +4,7 @@ using Il2CppLE.Data;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace LastEpoch_Hud.Scripts.Mods.Items
 {
@@ -19,7 +20,7 @@ namespace LastEpoch_Hud.Scripts.Mods.Items
         public static bool CanCraftToT7 = true;
         public static bool CanCraftIdols = true;
         public static bool CanCraftUniqueSet = true;
-        public static bool CanCraftWithoutShard = true; //Enable UpgradeBtn, Show shards in Material
+        public static bool CanCraftWithoutShard = true; //Enable UpgradeBtn, Show shards in Material        
 
         public static CraftingManager Crafting_Manager_instance = null; //Used to Show value in game
 
@@ -50,7 +51,8 @@ namespace LastEpoch_Hud.Scripts.Mods.Items
         }
         
         public class Current
-        {            
+        {    
+            public static OneItemContainer item_container = null;
             public static ItemData item = null;
             public static AffixSlotForge slot = null;
             public static CraftingUpgradeButton btn = null;
@@ -366,6 +368,8 @@ namespace LastEpoch_Hud.Scripts.Mods.Items
             public static bool updating = false;
             public static bool already_reset = false;
             public static string shards_text_filter = "";
+            public static GameObject FixStuckButton_obj = null;
+            public static string FixStuckButtonText_str = "Drop Item on Ground";
 
             public static void Init()
             {
@@ -398,46 +402,22 @@ namespace LastEpoch_Hud.Scripts.Mods.Items
                         //Move seal
                         Vector3 seal_position = Refs_Manager.craft_slot_manager.sealedAffixHolder.transform.position;
                         Refs_Manager.craft_slot_manager.sealedAffixHolder.transform.position = new Vector3(seal_position.x, seal_position.y - 200, seal_position.z);
+
+                        //Add Clear slot button (fix item stuck in forge)
+                        GameObject craftingMatButton = Functions.GetChild(__instance, "ViewCraftingMaterialsButton");
+                        RectTransform craftingMatButton_rect_transf = craftingMatButton.GetComponent<RectTransform>();
+                        float craftingMatButton_H = craftingMatButton_rect_transf.rect.height;
+                        float margin = 20 * craftingMatButton_rect_transf.lossyScale.x; //Fix Hight resolution scaling
+                        FixStuckButton_obj = Object.Instantiate(craftingMatButton, new Vector3(craftingMatButton.transform.position.x, (craftingMatButton.transform.position.y - craftingMatButton_H - margin), craftingMatButton.transform.position.z), Quaternion.identity);
+                        FixStuckButton_obj.gameObject.SetActive(false);
+                        FixStuckButton_obj.name = "UnstuckButton";
+                        FixStuckButton_obj.transform.SetParent(__instance.transform);
+                        FixStuckButton_obj.transform.localScale = craftingMatButton.transform.localScale;
+                        Button FixStuckButton = FixStuckButton_obj.GetComponent<Button>();
+                        FixStuckButton.onClick = new Button.ButtonClickedEvent();
+                        FixStuckButton.onClick.AddListener(Events.ClearSlot_OnClick_Action);
+
                         initialized = true;
-
-                        //Events
-                        /*Slot_refs[] refs = { slot_0_refs, slot_1_refs, slot_2_refs, slot_3_refs, slot_4_refs, slot_5_refs };
-                        foreach (Slot_refs r in refs)
-                        {
-                            UnityEngine.UI.Button upgrade_available_btn = r.upgrade_available.GetComponent<UnityEngine.UI.Button>();
-                            upgrade_available_btn.interactable = true;
-
-                            if (r.Slot_obj.name == slot_0_refs.Slot_obj.name)
-                            {
-                                upgrade_available_btn.onClick = new UnityEngine.UI.Button.ButtonClickedEvent();
-                                upgrade_available_btn.onClick.AddListener(Events.Slot_0_UpgradeAvailable_OnClick_Action);
-                            }
-                            else if (r.Slot_obj.name == slot_1_refs.Slot_obj.name)
-                            {
-                                upgrade_available_btn.onClick = new UnityEngine.UI.Button.ButtonClickedEvent();
-                                upgrade_available_btn.onClick.AddListener(Events.Slot_1_UpgradeAvailable_OnClick_Action);
-                            }
-                            else if (r.Slot_obj.name == slot_2_refs.Slot_obj.name)
-                            {
-                                upgrade_available_btn.onClick = new UnityEngine.UI.Button.ButtonClickedEvent();
-                                upgrade_available_btn.onClick.AddListener(Events.Slot_2_UpgradeAvailable_OnClick_Action);
-                            }
-                            else if (r.Slot_obj.name == slot_3_refs.Slot_obj.name)
-                            {
-                                upgrade_available_btn.onClick = new UnityEngine.UI.Button.ButtonClickedEvent();
-                                upgrade_available_btn.onClick.AddListener(Events.Slot_3_UpgradeAvailable_OnClick_Action);
-                            }
-                            else if (r.Slot_obj.name == slot_4_refs.Slot_obj.name)
-                            {
-                                upgrade_available_btn.onClick = new UnityEngine.UI.Button.ButtonClickedEvent();
-                                upgrade_available_btn.onClick.AddListener(Events.Slot_4_UpgradeAvailable_OnClick_Action);
-                            }
-                            else if (r.Slot_obj.name == slot_5_refs.Slot_obj.name)
-                            {
-                                upgrade_available_btn.onClick = new UnityEngine.UI.Button.ButtonClickedEvent();
-                                upgrade_available_btn.onClick.AddListener(Events.Slot_5_UpgradeAvailable_OnClick_Action);
-                            }
-                        }*/
                     }
                 }
             }
@@ -871,6 +851,19 @@ namespace LastEpoch_Hud.Scripts.Mods.Items
                     }
                 }
             }
+            public static void ShowHide_DropOnGround_Button()
+            {
+                if (!Ui.FixStuckButton_obj.IsNullOrDestroyed())
+                {
+                    Ui.FixStuckButton_obj.gameObject.SetActive(!Current.item.IsNullOrDestroyed());
+                    GameObject FixStuckButtonText_obj = Functions.GetChild(FixStuckButton_obj, "text");
+                    if (!FixStuckButtonText_obj.IsNullOrDestroyed())
+                    {
+                        TextMeshProUGUI FixStuckButtonText = FixStuckButtonText_obj.GetComponent<TextMeshProUGUI>();
+                        if (!FixStuckButtonText.IsNullOrDestroyed()) { FixStuckButtonText.text = FixStuckButtonText_str; }
+                    }
+                }
+            }
 
             public static void Update()
             {
@@ -1129,6 +1122,18 @@ namespace LastEpoch_Hud.Scripts.Mods.Items
                     Ui.Invoke_ShardElementBtn();
                 }
             }
+            public static readonly System.Action ClearSlot_OnClick_Action = new System.Action(ClearSlot_Click);
+            private static void ClearSlot_Click() //Fix Clear Slot
+            {
+                //Drop on Ground
+                if ((!Current.item.IsNullOrDestroyed()) && (!Refs_Manager.ground_item_manager.IsNullOrDestroyed()) && (!Refs_Manager.player_actor.IsNullOrDestroyed()))
+                {
+                    Refs_Manager.ground_item_manager.dropItemForPlayer(Refs_Manager.player_actor, Current.item, Refs_Manager.player_actor.position(), false);
+                }
+
+                //Clear Slot
+                if (!Current.item_container.IsNullOrDestroyed()) { Current.item_container.Clear(); }
+            }
         }
         public class Ui_Base
         {
@@ -1144,6 +1149,7 @@ namespace LastEpoch_Hud.Scripts.Mods.Items
                         Crafting_Main_Ui.IsOpen = true;
                         if (!Ui.initialized) { Ui.Init(); }
                         Ui.force_update_slots = true; //Force Update
+                        Ui.ShowHide_DropOnGround_Button();
                     }
                     else { Debug(false, "Disable"); }
                 }
@@ -1178,15 +1184,17 @@ namespace LastEpoch_Hud.Scripts.Mods.Items
                     if (Enable)
                     {                        
                         if (Crafting_Manager_instance.IsNullOrDestroyed()) { Crafting_Manager_instance = __instance; }
-                        ;
                         if (!__0.IsNullOrDestroyed())
                         {
-                            Current.item = null;
+                            Current.item = null;                            
                             OneItemContainer item_container = __0.TryCast<OneItemContainer>();
                             if (!item_container.IsNullOrDestroyed())
                             {
-                                if (!item_container.content.IsNullOrDestroyed()) { Current.item = item_container.content.data; }
+                                Current.item_container = item_container;
+                                if (!item_container.content.IsNullOrDestroyed()) { Current.item = item_container.content.data; }                                
                             }
+                            else { Current.item_container = null; }
+                            Ui.ShowHide_DropOnGround_Button();
                         }
                     }
                     else { Debug(false, "Disable"); }
@@ -1206,6 +1214,8 @@ namespace LastEpoch_Hud.Scripts.Mods.Items
                         Current.item = null;
                         Current.slot = null;
                         Current.btn = null;
+                        Current.item_container = null;
+                        Ui.ShowHide_DropOnGround_Button();                        
                     }
                     else { Debug(false, "Disable"); }
                 }
