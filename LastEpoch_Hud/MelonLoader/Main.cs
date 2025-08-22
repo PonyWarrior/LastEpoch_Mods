@@ -17,7 +17,7 @@ namespace LastEpoch_Hud
         public const string company_name = "Eleventh Hour Games";
         public const string game_name = "Last Epoch";
         public const string mod_name = "LastEpoch_Hud";
-        public const string mod_version = "4.4.4"; //LastEpoch 1.2.6.2
+        public const string mod_version = "4.4.7"; //LastEpoch 1.3
         public static bool debug = false;
 
         public override void OnInitializeMelon()
@@ -25,6 +25,10 @@ namespace LastEpoch_Hud
             logger_instance = LoggerInstance;
         }
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+        {
+            Scenes.SceneName = SceneManager.GetActiveScene().name;
+        }
+        public override void OnSceneWasUnloaded(int buildIndex, string sceneName)
         {
             Scenes.SceneName = SceneManager.GetActiveScene().name;
         }
@@ -177,10 +181,10 @@ namespace LastEpoch_Hud
                         break;
                     }
                 }
-                string[] no_bug = { "skin", "Modifier Button", "legendary_icon" };
+                string[] no_bug = { "skin", "Modifier Button", "legendary_icon", "quad_stash_row" };
                 if ((!found) && (!no_bug.Contains(name))) { Main.logger_instance?.Error("Functions.GetChild, Child : " + name + " not Found"); }
             }
-            else { Main.logger_instance?.Error("Obj is null "); }
+            else { Main.logger_instance.Error("GetChild(" + name + ") : Obj is null"); }
 
             return result;
         }

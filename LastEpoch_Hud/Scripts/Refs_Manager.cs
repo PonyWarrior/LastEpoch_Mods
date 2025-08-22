@@ -1,8 +1,9 @@
-﻿using MelonLoader;
-using UnityEngine;
+﻿using Il2Cpp;
 using Il2CppItemFiltering;
-using Il2Cpp;
 using Il2CppLE.Factions;
+using Il2CppLE.Services.Visuals;
+using MelonLoader;
+using UnityEngine;
 
 namespace LastEpoch_Hud.Scripts
 {
